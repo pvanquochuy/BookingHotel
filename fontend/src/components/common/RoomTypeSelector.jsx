@@ -1,3 +1,5 @@
+//chọn một loại phòng từ danh sách có sẵn hoặc thêm một loại phòng mới nếu nó chưa tồn tại.
+
 import React, { useEffect, useState } from "react";
 import { getRoomTypes } from "../utils/ApiFunctions";
 
@@ -17,7 +19,7 @@ const RoomStyleSelector = ({ handleRoomInputChange, newRoom }) => {
   };
   const handleAddNewRoomType = () => {
     if (newRoomType !== "") {
-      setRoomTypes([...roomTypes, newRoomType]);
+      setRoomTypes((prevTypes) => [...prevTypes, newRoomType]);
       setNewRoomType("");
       setShowNewRoomTypeInput(false);
     }
@@ -30,6 +32,7 @@ const RoomStyleSelector = ({ handleRoomInputChange, newRoom }) => {
           <select
             id="roomType"
             name="roomType"
+            required
             value={newRoom.roomType}
             onChange={(e) => {
               if (e.target.value === "Add New") {
