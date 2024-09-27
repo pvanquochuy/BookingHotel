@@ -1,5 +1,6 @@
 package com.pvanquochuy.booking_hotel.service.impl;
 
+import com.pvanquochuy.booking_hotel.exception.InternalServerException;
 import com.pvanquochuy.booking_hotel.exception.ResourceNotFoundException;
 import com.pvanquochuy.booking_hotel.model.Room;
 import com.pvanquochuy.booking_hotel.repository.RoomRepository;
@@ -64,5 +65,26 @@ public class RoomServiceImpl implements IRoomService {
         if(theRoom.isPresent()){
             roomRepository.deleteById(roomId);
         }
+    }
+
+    @Override
+    public Room updateRoom(Long roomId, String roomType, BigDecimal roomPrice, byte[] photoBytes) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(()-> new ResourceNotFoundException("Room not found"));
+        if(roomType !=null) room.setRoomType(roomType);
+        if(roomPrice !=null) room.setRoomPrice(roomPrice);
+        if(photoBytes !=null && photoBytes.length > 0){
+            try{
+                room.setPhoto(new SerialBlob(photoBytes));
+            }catch (SQLException e){
+                throw new InternalServerException("Error updating room");
+            }
+        }
+        return roomRepository.save(room);
+    }
+
+    @Override
+    public Optional<Room> getRoomById(Long roomId) {
+        return Optional.of(roomRepository.findById(roomId).get());
     }
 }
