@@ -67,11 +67,14 @@ const ExistingRooms = () => {
     }, 3000);
   };
 
-  const caculateTotalPages = (filteredRooms, roomsPerPage, rooms) => {
+  const calculateTotalPages = (filteredRooms, roomsPerPage, rooms) => {
     const totalRooms =
       filteredRooms.length > 0 ? filteredRooms.length : rooms.length;
     return Math.ceil(totalRooms / roomsPerPage);
   };
+  // const calculateTotalPages = (filteredRooms, roomsPerPage) => {
+  //   return Math.ceil(filteredRooms.length / roomsPerPage);
+  // };
 
   const indexOfLastRoom = currentPage * roomsPerPage;
   const indexOfFirstRoom = indexOfLastRoom - roomsPerPage;
@@ -149,7 +152,8 @@ const ExistingRooms = () => {
             </table>
             <RoomPaginator
               currentPage={currentPage}
-              totalPages={caculateTotalPages(
+              // totalPages={calculateTotalPages(filteredRooms, roomsPerPage)}
+              totalPages={calculateTotalPages(
                 filteredRooms,
                 roomsPerPage,
                 rooms
