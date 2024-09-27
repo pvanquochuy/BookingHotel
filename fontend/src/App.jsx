@@ -21,8 +21,8 @@ function App() {
             <Route path="/existing-rooms" element={<ExistingRooms />} />
             <Route path="/add-room" element={<AddRoom />} />
           </Routes>
+          <Footer />
         </Router>
-        <Footer />
       </main>
     </>
   );
