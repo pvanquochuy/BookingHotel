@@ -52,10 +52,8 @@ public class BookingController {
     public ResponseEntity<?> saveBooking(@PathVariable Long roomId,
                                          @RequestBody BookedRoom bookingRequest){
         try{
-            String confirmationCode = bookingService.saveBooking(roomId, bookingRequest){
+            String confirmationCode = bookingService.saveBooking(roomId, bookingRequest);
                 return ResponseEntity.ok("Room booked successfully. Your booking confirmation code is :" + confirmationCode);
-
-            }
         }catch (InvalidBookingRequestException e){
             return ResponseEntity.badRequest().body(e.getMessage());
         }
