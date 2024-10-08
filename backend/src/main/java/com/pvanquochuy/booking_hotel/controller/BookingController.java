@@ -11,6 +11,7 @@ import com.pvanquochuy.booking_hotel.service.IRoomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -49,11 +50,13 @@ public class BookingController {
         }
     }
 
-    @PostMapping("/room/{roomId}/booking")
+    @PostMapping("/room/{roomId}/{userId}/booking")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('USER')")
     public ResponseEntity<?> saveBooking(@PathVariable Long roomId,
+                                         @PathVariable Long userId,
                                          @RequestBody BookedRoom bookingRequest){
         try{
-            String confirmationCode = bookingService.saveBooking(roomId, bookingRequest);
+            String confirmationCode = bookingService.saveBooking(roomId, userId ,bookingRequest);
                 return ResponseEntity.ok("Room booked successfully. Your booking confirmation code is :" + confirmationCode);
         }catch (InvalidBookingRequestException e){
             return ResponseEntity.badRequest().body(e.getMessage());

@@ -1,10 +1,7 @@
 package com.pvanquochuy.booking_hotel.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 
@@ -33,9 +30,17 @@ public class BookedRoom {
     private int totalNumOfGuest;
     @Column(name = "confirmation_Code")
     private String bookingConfirmationCode;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id")
     private Room room;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private User user;
+
 
     public void calculateTotalNumberOfGuest() {
         this.totalNumOfGuest = this.numOfAdults + this.numOfChildren;
@@ -46,8 +51,8 @@ public class BookedRoom {
         calculateTotalNumberOfGuest();
     }
 
-    public void setNumOfChildrens(int numOfChildrens) {
-        this.numOfChildren = numOfChildrens;
+    public void setNumOfChildren(int numOfChildren) {
+        this.numOfChildren = numOfChildren;
         calculateTotalNumberOfGuest();
     }
 

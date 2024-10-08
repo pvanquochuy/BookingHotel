@@ -1,11 +1,16 @@
 package com.pvanquochuy.booking_hotel.service.impl;
 
 import com.pvanquochuy.booking_hotel.exception.InvalidBookingRequestException;
+import com.pvanquochuy.booking_hotel.exception.UserException;
 import com.pvanquochuy.booking_hotel.model.BookedRoom;
 import com.pvanquochuy.booking_hotel.model.Room;
+import com.pvanquochuy.booking_hotel.model.User;
 import com.pvanquochuy.booking_hotel.repository.BookingRepository;
+import com.pvanquochuy.booking_hotel.repository.RoomRepository;
+import com.pvanquochuy.booking_hotel.repository.UserRepository;
 import com.pvanquochuy.booking_hotel.service.IBookingService;
 import com.pvanquochuy.booking_hotel.service.IRoomService;
+import com.pvanquochuy.booking_hotel.utils.Utils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +21,8 @@ import java.util.List;
 public class BookingServiceImpl implements IBookingService {
     private final BookingRepository bookingRepository;
     private final IRoomService roomService;
+    private final RoomRepository roomRepository;
+    private final UserRepository userRepository;
 
     @Override
     public List<BookedRoom> getAllBookings() {
@@ -33,21 +40,31 @@ public class BookingServiceImpl implements IBookingService {
     }
 
     @Override
-    public String saveBooking(Long roomId, BookedRoom bookingRequest) {
+    public String saveBooking(Long roomId, Long userId ,BookedRoom bookingRequest) {
         if(bookingRequest.getCheckOutDate().isBefore(bookingRequest.getCheckInDate())){
             throw new InvalidBookingRequestException("Check-in date must come before check-out date");
         }
-        Room room = roomService.getRoomById(roomId).get();
+
+        Room room = roomRepository.findById(roomId).orElseThrow(() -> new InvalidBookingRequestException("Room Not Found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new UserException("User Not Found"));
+
+
         List<BookedRoom> existingBookings = room.getBookings();
-        boolean roomIsAvailable = roomIsAvailable(bookingRequest, existingBookings);
-        if(roomIsAvailable){
-            room.addBooking(bookingRequest);
-            bookingRepository.save(bookingRequest);
-        }else{
-            throw new InvalidBookingRequestException("Sorry, This room is not available for the selected dates.");
+
+        if (!roomIsAvailable(bookingRequest, existingBookings)) {
+            throw new InvalidBookingRequestException("Room not Available for selected date range");
         }
+
+        bookingRequest.setRoom(room);
+        bookingRequest.setUser(user);
+        String bookingConfirmationCode = Utils.generateRandomConfirmationCode(10);
+        bookingRequest.setBookingConfirmationCode(bookingConfirmationCode);
+
+        bookingRepository.save(bookingRequest);
+
         return bookingRequest.getBookingConfirmationCode();
     }
+
     @Override
     public BookedRoom findByBookingConfirmationCode(String confirmationCode) {
         return bookingRepository.findByBookingConfirmationCode(confirmationCode);
