@@ -27,6 +27,7 @@ public class UserServiceImpl implements IUserService {
     @Autowired
     private AuthenticationManager authenticationManager;
 
+
     @Override
     public Response register(User user) {
         Response response = new Response();

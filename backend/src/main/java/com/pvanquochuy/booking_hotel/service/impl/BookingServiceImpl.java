@@ -1,5 +1,7 @@
 package com.pvanquochuy.booking_hotel.service.impl;
 
+import com.pvanquochuy.booking_hotel.dto.BookedRoomDTO;
+import com.pvanquochuy.booking_hotel.dto.Response;
 import com.pvanquochuy.booking_hotel.exception.InvalidBookingRequestException;
 import com.pvanquochuy.booking_hotel.exception.UserException;
 import com.pvanquochuy.booking_hotel.model.BookedRoom;
@@ -12,6 +14,7 @@ import com.pvanquochuy.booking_hotel.service.IBookingService;
 import com.pvanquochuy.booking_hotel.service.IRoomService;
 import com.pvanquochuy.booking_hotel.utils.Utils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,8 +28,20 @@ public class BookingServiceImpl implements IBookingService {
     private final UserRepository userRepository;
 
     @Override
-    public List<BookedRoom> getAllBookings() {
-        return bookingRepository.findAll();
+    public Response getAllBookings()     {
+        Response response = new Response();
+        try{
+            List<BookedRoom> bookings = bookingRepository.findAll(Sort.by(Sort.Direction.DESC, "id"));
+            List<BookedRoomDTO> bookedRoomDTOList =Utils.mapBookingListEntityToBookingListDTO(bookings);
+            response.setBookingList(bookedRoomDTOList);
+            response.setStatusCode(200);
+            response.setMessage("successful");
+
+        }catch (Exception e){
+            response.setStatusCode(500);
+            response.setMessage("Error Getting all bookings: " + e.getMessage());
+        }
+        return response;
     }
 
     @Override
@@ -66,8 +81,21 @@ public class BookingServiceImpl implements IBookingService {
     }
 
     @Override
-    public BookedRoom findByBookingConfirmationCode(String confirmationCode) {
-        return bookingRepository.findByBookingConfirmationCode(confirmationCode);
+    public Response findByBookingConfirmationCode(String confirmationCode) {
+        Response response = new Response();
+        try{
+            BookedRoom bookedRoom =bookingRepository.findByBookingConfirmationCode(confirmationCode);
+            BookedRoomDTO bookedRoomDTO = Utils.mapBookingEntityToBookingDTOPlusBookedRooms(bookedRoom, true);
+            response.setBooking(bookedRoomDTO);
+            response.setStatusCode(200);
+            response.setMessage("successful");
+
+        }catch (Exception e){
+            response.setStatusCode(500);
+            response.setMessage("Error Finding a booking: " + e.getMessage());
+
+        }
+        return response;
     }
 
 

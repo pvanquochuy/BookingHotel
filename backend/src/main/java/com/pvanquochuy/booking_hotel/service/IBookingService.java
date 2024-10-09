@@ -1,5 +1,6 @@
 package com.pvanquochuy.booking_hotel.service;
 
+import com.pvanquochuy.booking_hotel.dto.Response;
 import com.pvanquochuy.booking_hotel.model.BookedRoom;
 
 import java.util.List;
@@ -12,7 +13,7 @@ public interface IBookingService {
 
     List<BookedRoom> getAllBookingsByRoomId(Long roomId);
 
-    List<BookedRoom> getAllBookings();
+    Response getAllBookings();
 
-    BookedRoom findByBookingConfirmationCode(String confirmationCode);
+    Response findByBookingConfirmationCode(String confirmationCode);
 }
