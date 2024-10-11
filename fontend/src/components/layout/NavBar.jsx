@@ -1,11 +1,20 @@
 import React, { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { logout } from "../utils/ApiFunctions";
 
 const NavBar = () => {
   const [showAccount, setShowAccount] = useState(false);
+  const navigate = useNavigate();
 
   const handleAccountClick = () => {
     setShowAccount(!showAccount);
+  };
+  const handleLogout = () => {
+    const isLogout = window.confirm("Are you sure you really want to logout");
+    if (isLogout) {
+      logout();
+      navigate("/");
+    }
   };
 
   return (
@@ -81,7 +90,11 @@ const NavBar = () => {
                   <hr className="dropdown-divider" />
                 </li>
                 <li>
-                  <Link to={"/logout"} className="dropdown-item">
+                  <Link
+                    to={"/logout"}
+                    className="dropdown-item"
+                    onClick={handleLogout}
+                  >
                     Logout
                   </Link>
                 </li>
