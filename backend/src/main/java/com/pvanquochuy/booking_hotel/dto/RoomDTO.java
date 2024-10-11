@@ -13,5 +13,6 @@ public class RoomDTO {
     private String roomType;
     private BigDecimal roomPrice;
     private Blob photo;
-    private List<BookedRoomDTO> bookings;
+    private String roomDescription;
+    private List<BookingDTO> bookings;
 }

@@ -10,9 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserDTO {
 
@@ -21,6 +18,6 @@ public class UserDTO {
     private String name;
     private String phoneNumber;
     private String role;
-    private List<BookedRoomDTO> bookings = new ArrayList<>();
+    private List<BookingDTO> bookings = new ArrayList<>();
 }
 

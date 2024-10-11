@@ -7,7 +7,7 @@ import java.time.LocalDate;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class BookedRoomDTO {
+public class BookingDTO {
     private Long id;
     private LocalDate checkInDate;
     private LocalDate checkOutDate;

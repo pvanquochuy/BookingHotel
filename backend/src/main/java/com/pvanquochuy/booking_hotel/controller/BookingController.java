@@ -1,70 +1,58 @@
 package com.pvanquochuy.booking_hotel.controller;
 
 import com.pvanquochuy.booking_hotel.dto.Response;
-import com.pvanquochuy.booking_hotel.exception.InvalidBookingRequestException;
-import com.pvanquochuy.booking_hotel.exception.ResourceNotFoundException;
-import com.pvanquochuy.booking_hotel.model.BookedRoom;
+import com.pvanquochuy.booking_hotel.model.Booking;
 import com.pvanquochuy.booking_hotel.model.Room;
 import com.pvanquochuy.booking_hotel.response.BookingResponse;
 import com.pvanquochuy.booking_hotel.response.RoomResponse;
 import com.pvanquochuy.booking_hotel.service.IBookingService;
 import com.pvanquochuy.booking_hotel.service.IRoomService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 
 //@CrossOrigin()
-@RequiredArgsConstructor
 @RestController
 @RequestMapping("/bookings")
 public class BookingController {
 
-    private final IBookingService bookingService;
-    private final IRoomService roomService;
+    @Autowired
+    private IBookingService bookingService;
 
-
-    @GetMapping("/all-bookings")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<Response> getAllBookings(){
-        Response response =bookingService.getAllBookings();
-        return ResponseEntity.status(response.getStatusCode()).body(response);
-    }
-
-    @GetMapping("confirmation/{confirmationCode}")
-    public ResponseEntity<Response> getBookingByConfirmationCode(@PathVariable String confirmationCode){
-        Response response  = bookingService.findByBookingConfirmationCode(confirmationCode);
-        return ResponseEntity.status(response.getStatusCode()).body(response);
-    }
-
-    @PostMapping("/room/{roomId}/{userId}/booking")
+    @PostMapping("/book-room/{roomId}/{userId}")
     @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('USER')")
-    public ResponseEntity<?> saveBooking(@PathVariable Long roomId,
-                                         @PathVariable Long userId,
-                                         @RequestBody BookedRoom bookingRequest){
-        try{
-            String confirmationCode = bookingService.saveBooking(roomId, userId ,bookingRequest);
-                return ResponseEntity.ok("Room booked successfully. Your booking confirmation code is :" + confirmationCode);
-        }catch (InvalidBookingRequestException e){
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<Response> saveBookings(@PathVariable Long roomId,
+                                                 @PathVariable Long userId,
+                                                 @RequestBody Booking bookingRequest) {
+
+
+        Response response = bookingService.saveBooking(roomId, userId, bookingRequest);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+
     }
 
-    @DeleteMapping("/booking/{bookingId}/delete")
-    public void cancelBooking(@PathVariable Long bookingId){
-        bookingService.cancelBooking(bookingId);
+    @GetMapping("/all")
+    @PreAuthorize("hasAuthority('ADMIN')")
+    public ResponseEntity<Response> getAllBookings() {
+        Response response = bookingService.getAllBookings();
+        return ResponseEntity.status(response.getStatusCode()).body(response);
     }
 
-    private BookingResponse getBookingResponse(BookedRoom booking) {
-        Room theRoom = roomService.getRoomById(booking.getRoom().getId()).get();
-        RoomResponse room = new RoomResponse(theRoom.getId(), theRoom.getRoomType(), theRoom.getRoomPrice());
-        return new BookingResponse(
-                booking.getId(), booking.getCheckInDate(),
-                booking.getCheckOutDate(), booking.getGuestFullName(),
-                booking.getGuestEmail(), booking.getNumOfAdults(),
-                booking.getNumOfChildren(), booking.getTotalNumOfGuest(),
-                booking.getBookingConfirmationCode(), room);
+    @GetMapping("/get-by-confirmation-code/{confirmationCode}")
+    public ResponseEntity<Response> getBookingByConfirmationCode(@PathVariable String confirmationCode) {
+        Response response = bookingService.findBookingByConfirmationCode(confirmationCode);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
     }
+
+    @DeleteMapping("/cancel/{bookingId}")
+    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('USER')")
+    public ResponseEntity<Response> cancelBooking(@PathVariable Long bookingId) {
+        Response response = bookingService.cancelBooking(bookingId);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
+
 
 }

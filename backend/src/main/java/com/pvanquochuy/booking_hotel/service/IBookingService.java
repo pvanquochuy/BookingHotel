@@ -1,19 +1,17 @@
 package com.pvanquochuy.booking_hotel.service;
 
 import com.pvanquochuy.booking_hotel.dto.Response;
-import com.pvanquochuy.booking_hotel.model.BookedRoom;
+import com.pvanquochuy.booking_hotel.model.Booking;
 
 import java.util.List;
 
 public interface IBookingService {
 
-    void cancelBooking(Long bookingId);
+    Response saveBooking(Long roomId, Long userId, Booking bookingRequest);
 
-    String saveBooking(Long roomId, Long userId ,BookedRoom bookingRequest);
-
-    List<BookedRoom> getAllBookingsByRoomId(Long roomId);
+    Response findBookingByConfirmationCode(String confirmationCode);
 
     Response getAllBookings();
 
-    Response findByBookingConfirmationCode(String confirmationCode);
+    Response cancelBooking(Long bookingId);
 }

@@ -1,7 +1,6 @@
 package com.pvanquochuy.booking_hotel.model;
 
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pvanquochuy.booking_hotel.enums.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -18,10 +17,8 @@ import org.springframework.security.core.GrantedAuthority;
 
 import java.util.List;
 
-
+@Data
 @Entity
-@Getter
-@Setter
 @Table(name = "users")
 public class User implements UserDetails{
     @Id
@@ -50,7 +47,7 @@ public class User implements UserDetails{
     private Role role;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<BookedRoom> bookings = new ArrayList<>();
+    private List<Booking> bookings = new ArrayList<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

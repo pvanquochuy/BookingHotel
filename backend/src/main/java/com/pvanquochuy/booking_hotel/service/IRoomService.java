@@ -1,26 +1,30 @@
 package com.pvanquochuy.booking_hotel.service;
 
+import com.pvanquochuy.booking_hotel.dto.Response;
 import com.pvanquochuy.booking_hotel.model.Room;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 public interface IRoomService {
-    Room addNewRoom(MultipartFile photo, String roomType, BigDecimal roomPrice) throws SQLException, IOException;
+    Response addNewRoom(MultipartFile photo, String roomType, BigDecimal roomPrice, String description);
 
     List<String> getAllRoomTypes();
 
-    List<Room> getAllRooms();
+    Response getAllRooms();
 
-    byte[] getRoomPhotoByRoomId(Long roomId) throws SQLException;
+    Response deleteRoom(Long roomId);
 
-    void deleteRoom(Long roomId);
+    Response updateRoom(Long roomId, String description, String roomType, BigDecimal roomPrice, MultipartFile photo);
 
-    Room updateRoom(Long roomId, String roomType, BigDecimal roomPrice, byte[] photoBytes);
+    Response getRoomById(Long roomId);
 
-    Optional<Room> getRoomById(Long roomId);
+    Response getAvailableRoomsByDataAndType(LocalDate checkInDate, LocalDate checkOutDate, String roomType);
+
+    Response getAllAvailableRooms();
 }
