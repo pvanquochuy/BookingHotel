@@ -150,7 +150,7 @@ public class RoomServiceImpl implements IRoomService {
             response.setMessage(e.getMessage());
         } catch (Exception e) {
             response.setStatusCode(500);
-            response.setMessage("Error saving a room " + e.getMessage());
+            response.setMessage("Error retrieving a room: " + e.getMessage());
         }
         return response;
     }
