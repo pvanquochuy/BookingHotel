@@ -6,6 +6,8 @@ export const api = axios.create({
 
 export function getHeader() {
   const token = localStorage.getItem("token");
+  console.log("Token:", token);
+
   return {
     Authorization: `Bearer ${token}`,
     "Content-Type": "application/json",
@@ -61,6 +63,47 @@ export async function loginUser(email, password) {
   }
 }
 
+/***USERS */
+
+/*  This is  to get the user profile */
+export async function getAllUsers() {
+  const response = await api.get("/users/all", {
+    headers: getHeader(),
+  });
+  return response.data;
+}
+
+export async function getUserProfile() {
+  const response = await api.get("/users/get-logged-in-profile-info", {
+    headers: getHeader(),
+  });
+  return response.data;
+}
+
+/* This is the  to get a single user */
+export async function getUser(userId) {
+  const response = await api.get(`/users/get-by-id/${userId}`, {
+    headers: getHeader(),
+  });
+  return response.data;
+}
+
+/* This is the  to get user bookings by the user id */
+export async function getUserBookings(userId) {
+  const response = await api.get(`/users/get-user-bookings/${userId}`, {
+    headers: getHeader(),
+  });
+  return response.data;
+}
+
+/* This is to delete a user */
+export async function deleteUser(userId) {
+  const response = await api.delete(`/users/delete/${userId}`, {
+    headers: getHeader(),
+  });
+  return response.data;
+}
+
 /**
  * add new room
  * @param {*} photo
@@ -96,6 +139,19 @@ export async function getRoomTypes() {
   } catch (error) {
     throw new Error("Error fetching room types", error);
   }
+}
+
+/* This  gets all availavle by dates rooms from the database with a given date and a room type */
+export async function getAvailableRoomsByDateAndType(
+  checkInDate,
+  checkOutDate,
+  roomType
+) {
+  const result = await api.get(
+    `/rooms/available-rooms-by-date-and-type?checkInDate=${checkInDate}
+&checkOutDate=${checkOutDate}&roomType=${roomType}`
+  );
+  return result.data;
 }
 
 /**
@@ -168,10 +224,11 @@ export async function getRoomById(roomId) {
  * @param {*} booking
  * @returns
  */
-export async function bookRoom(roomId, booking) {
+export async function bookRoom(roomId, userId, booking) {
   try {
+    console.log("USER ID IS: " + userId);
     const response = await api.post(
-      `/bookings/room/${roomId}/booking`,
+      `/bookings/room/${roomId}/${userId}/booking`,
       booking,
       {
         headers: getHeader(),
