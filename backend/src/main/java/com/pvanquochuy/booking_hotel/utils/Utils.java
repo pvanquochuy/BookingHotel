@@ -3,11 +3,15 @@ package com.pvanquochuy.booking_hotel.utils;
 import com.pvanquochuy.booking_hotel.dto.BookingDTO;
 import com.pvanquochuy.booking_hotel.dto.RoomDTO;
 import com.pvanquochuy.booking_hotel.dto.UserDTO;
+import com.pvanquochuy.booking_hotel.exception.InternalServerException;
 import com.pvanquochuy.booking_hotel.model.Booking;
 import com.pvanquochuy.booking_hotel.model.Room;
 import com.pvanquochuy.booking_hotel.model.User;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.tomcat.util.codec.binary.Base64;
 
+import java.sql.Blob;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,6 +31,24 @@ public class Utils {
             throw new IllegalArgumentException("Length must be positive");
         }
         return RandomStringUtils.randomAlphanumeric(length).toUpperCase();
+    }
+
+    /**
+     * Converts a Blob to a Base64-encoded string.
+     *
+     * @param photoBlob the Blob to convert
+     * @return the Base64-encoded string, or null if the Blob is null
+     */
+    public static String convertBlobToBase64(Blob photoBlob) {
+        if (photoBlob == null) {
+            return null;
+        }
+        try {
+            byte[] photoBytes = photoBlob.getBytes(1, (int) photoBlob.length());
+            return Base64.encodeBase64String(photoBytes);
+        } catch (SQLException e) {
+            throw new InternalServerException("Error converting Blob to Base64 string");
+        }
     }
 
     /**
@@ -69,14 +91,22 @@ public class Utils {
         return bookingDTO;
     }
 
-    public static RoomDTO mapRoomEntityToRoomDTOPlusBookings(Room room) {
+    public static RoomDTO mapRoomEntityToRoomDTO(Room room) {
         RoomDTO roomDTO = new RoomDTO();
 
         roomDTO.setId(room.getId());
         roomDTO.setRoomType(room.getRoomType());
         roomDTO.setRoomPrice(room.getRoomPrice());
-        roomDTO.setPhoto(room.getPhoto());
         roomDTO.setRoomDescription(room.getRoomDescription());
+        // Chuyển đổi Blob thành Base64 string
+        roomDTO.setPhoto(convertBlobToBase64(room.getPhoto()));
+        return roomDTO;
+    }
+
+
+    public static RoomDTO mapRoomEntityToRoomDTOPlusBookings(Room room) {
+        RoomDTO roomDTO = mapRoomEntityToRoomDTO(room);
+
 
         if (room.getBookings() != null) {
             roomDTO.setBookings(room.getBookings().stream().map(Utils::mapBookingEntityToBookingDTO).collect(Collectors.toList()));
@@ -103,12 +133,7 @@ public class Utils {
             bookingDTO.setUser(Utils.mapUserEntityToUserDTO(booking.getUser()));
         }
         if (booking.getRoom() != null) {
-            RoomDTO roomDTO = new RoomDTO();
-
-            roomDTO.setId(booking.getRoom().getId());
-            roomDTO.setRoomType(booking.getRoom().getRoomType());
-            roomDTO.setRoomPrice(booking.getRoom().getRoomPrice());
-            roomDTO.setPhoto(booking.getRoom().getPhoto());
+            RoomDTO roomDTO = mapRoomEntityToRoomDTO(booking.getRoom());
             bookingDTO.setRoom(roomDTO);
         }
         return bookingDTO;
@@ -130,15 +155,6 @@ public class Utils {
     }
 
 
-    public static RoomDTO mapRoomEntityToRoomDTO(Room room) {
-        RoomDTO roomDTO = new RoomDTO();
-
-        roomDTO.setId(room.getId());
-        roomDTO.setRoomType(room.getRoomType());
-        roomDTO.setRoomPrice(room.getRoomPrice());
-        roomDTO.setPhoto(room.getPhoto());
-        return roomDTO;
-    }
 
     public static List<RoomDTO> mapRoomListEntityToRoomListDTO(List<Room> roomList) {
         return roomList.stream().map(Utils::mapRoomEntityToRoomDTO).collect(Collectors.toList());

@@ -1,72 +1,90 @@
 import React, { useEffect, useState } from "react";
-import { bookRoom, getRoomById } from "../utils/ApiFunctions";
-import { Form, FormControl } from "react-bootstrap";
+import { bookRoom, getRoomById, getUserProfile } from "../utils/ApiFunctions";
+import { Form, FormControl, Button, Alert } from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
 import moment from "moment";
 import BookingSummary from "./BookingSummary";
 
 const BookingForm = () => {
+  // State quản lý thông tin người dùng và đặt phòng
   const [isValidated, setIsValidated] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [roomPrice, setRoomPrice] = useState(0);
+  const [userId, setUserId] = useState(""); // Thêm state cho userId
+
   const [booking, setBooking] = useState({
-    guestName: "",
+    guestFullName: "", // Đổi từ guestName thành guestFullName để khớp với form
     guestEmail: "",
     checkInDate: "",
     checkOutDate: "",
-    numberOfAdults: "",
-    numberOfChildren: "",
+    numberOfAdults: 1, // Thiết lập giá trị mặc định
+    numberOfChildren: 0, // Thiết lập giá trị mặc định
   });
 
+  // Hàm xử lý thay đổi trong các trường nhập liệu
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setBooking({ ...booking, [name]: value });
     setErrorMessage("");
   };
 
-  const [roomInfo, setRoomInfo] = useState({
-    photo: "",
-    roomType: "",
-    roomPrice: "",
-  });
-
   const { roomId } = useParams();
   const navigate = useNavigate();
 
+  // Hàm lấy giá phòng theo roomId
   const getRoomPriceById = async (roomId) => {
     try {
       const response = await getRoomById(roomId);
       setRoomPrice(response.roomPrice);
     } catch (error) {
-      throw new Error(error);
+      setErrorMessage("Failed to fetch room price.");
+      console.error(error);
     }
   };
 
+  // Hàm lấy userId từ API
+  const fetchUserProfile = async () => {
+    try {
+      const userProfile = await getUserProfile();
+      setUserId(userProfile.user.id);
+    } catch (error) {
+      setErrorMessage("Failed to fetch user profile.");
+      console.error(error);
+    }
+  };
+
+  // useEffect để lấy roomPrice và userId khi component mount hoặc roomId thay đổi
   useEffect(() => {
     getRoomPriceById(roomId);
+    fetchUserProfile();
   }, [roomId]);
 
+  // Hàm tính toán tổng số tiền thanh toán
   const calculatePayment = () => {
     const checkInDate = moment(booking.checkInDate);
     const checkOutDate = moment(booking.checkOutDate);
-    const diffInDays = checkOutDate.diff(checkInDate);
+    const diffInDays = checkOutDate.diff(checkInDate, "days");
     const price = roomPrice ? roomPrice : 0;
     return diffInDays * price;
   };
 
+  // Hàm kiểm tra tính hợp lệ của số lượng khách
   const isGuestValid = () => {
-    const adultCount = parseInt(booking.numberOfAdults);
-    const childrenCount = parseInt(booking.numberOfChildren);
+    const adultCount = parseInt(booking.numberOfAdults, 10);
+    const childrenCount = parseInt(booking.numberOfChildren, 10);
     const totalCount = adultCount + childrenCount;
     return totalCount >= 1 && adultCount >= 1;
   };
 
+  // Hàm kiểm tra tính hợp lệ của ngày trả phòng
   const isCheckOutDateValid = () => {
     if (
       !moment(booking.checkOutDate).isSameOrAfter(moment(booking.checkInDate))
     ) {
-      setErrorMessage("Check-out date must come after check-in date");
+      setErrorMessage(
+        "Check-out date must come after or on the same day as check-in date."
+      );
       return false;
     } else {
       setErrorMessage("");
@@ -74,25 +92,66 @@ const BookingForm = () => {
     }
   };
 
+  // Hàm xử lý khi submit form
   const handleSubmit = (e) => {
     e.preventDefault();
     const form = e.currentTarget;
-    if (form.checkValidity() === false || !isCheckOutDateValid()) {
+    if (
+      form.checkValidity() === false ||
+      !isCheckOutDateValid() ||
+      !isGuestValid()
+    ) {
       e.stopPropagation();
-    } else {
-      setIsSubmitted(true);
       setIsValidated(true);
+      setErrorMessage("Please ensure all fields are correctly filled out.");
+      return;
+    } else {
+      setIsValidated(true);
+      setIsSubmitted(true);
     }
   };
 
+  // Hàm xử lý khi xác nhận đặt phòng
   const handleBooking = async () => {
     try {
-      const confirmationCode = await bookRoom(roomId, booking);
-      navigate("/", { state: { message: { confirmationCode } } });
-      setIsSubmitted(true);
+      // Tính toán tổng tiền
+      const payment = calculatePayment();
+
+      // Kiểm tra xem số ngày đặt phòng có hợp lệ
+      if (payment <= 0) {
+        setErrorMessage("The number of days for booking must be at least 1.");
+        return;
+      }
+
+      // Tạo đối tượng đặt phòng để gửi lên API
+      const bookingData = {
+        guestName: booking.guestFullName, // Đổi từ guestFullName thành guestName nếu API yêu cầu
+        guestEmail: booking.guestEmail,
+        checkInDate: booking.checkInDate,
+        checkOutDate: booking.checkOutDate,
+        numberOfAdults: parseInt(booking.numberOfAdults, 10),
+        numberOfChildren: parseInt(booking.numberOfChildren, 10),
+        totalPrice: payment,
+      };
+
+      // Gọi API để đặt phòng với đầy đủ các tham số
+      const response = await bookRoom(roomId, userId, bookingData);
+
+      // Kiểm tra phản hồi từ API
+      if (response.statusCode === 200 || response.status === "success") {
+        // Điều chỉnh điều kiện này tùy thuộc vào phản hồi API
+        navigate("/", {
+          state: {
+            message: { confirmationCode: response.bookingConfirmationCode },
+          },
+        });
+      } else {
+        setErrorMessage("Booking failed. Please try again.");
+      }
     } catch (error) {
-      setErrorMessage(error.message);
-      navigate("/", { state: { error: { error: errorMessage } } });
+      setErrorMessage(error.message || "Booking failed.");
+      console.error(error);
+      // Không cần điều hướng ở đây để người dùng có thể sửa lỗi
     }
   };
 
@@ -104,23 +163,23 @@ const BookingForm = () => {
             <div className="card card-body mt-5">
               <h4 className="card card-title">Reserve Room</h4>
               <Form noValidate validated={isValidated} onSubmit={handleSubmit}>
-                <Form.Group>
-                  <Form.Label htmlFor="guestName">Full Name:</Form.Label>
+                <Form.Group className="mb-3">
+                  <Form.Label htmlFor="guestFullName">Full Name:</Form.Label>
                   <FormControl
                     required
                     type="text"
                     id="guestFullName"
                     name="guestFullName"
                     value={booking.guestFullName}
-                    placeholder="Enter your fullname"
+                    placeholder="Enter your full name"
                     onChange={handleInputChange}
                   />
                   <Form.Control.Feedback type="invalid">
-                    Please enter your fullname
+                    Please enter your full name.
                   </Form.Control.Feedback>
                 </Form.Group>
 
-                <Form.Group>
+                <Form.Group className="mb-3">
                   <Form.Label htmlFor="guestEmail">Email:</Form.Label>
                   <FormControl
                     required
@@ -132,33 +191,19 @@ const BookingForm = () => {
                     onChange={handleInputChange}
                   />
                   <Form.Control.Feedback type="invalid">
-                    Please enter your email
+                    Please enter a valid email.
                   </Form.Control.Feedback>
                 </Form.Group>
 
-                <fieldset style={{ border: "2px" }}>
-                  <legend>Lodging period</legend>
+                <fieldset
+                  className="mb-3"
+                  style={{ border: "2px solid #ced4da", padding: "10px" }}
+                >
+                  <legend>Lodging Period</legend>
                   <div className="row">
                     <div className="col-6">
-                      <Form.Label htmlFor="checkOutDate">
-                        Check-Out date:
-                      </Form.Label>
-                      <FormControl
-                        required
-                        type="date"
-                        id="checkOutDate"
-                        name="checkOutDate"
-                        value={booking.checkOutDate}
-                        placeholder="check-out date"
-                        onChange={handleInputChange}
-                      />
-                      <Form.Control.Feedback type="invalid">
-                        Please select a check-out date
-                      </Form.Control.Feedback>
-                    </div>
-                    <div className="col-6">
                       <Form.Label htmlFor="checkInDate">
-                        Check-In date:
+                        Check-In Date:
                       </Form.Label>
                       <FormControl
                         required
@@ -166,22 +211,43 @@ const BookingForm = () => {
                         id="checkInDate"
                         name="checkInDate"
                         value={booking.checkInDate}
-                        placeholder="check-in date"
+                        placeholder="Check-in date"
                         onChange={handleInputChange}
                       />
                       <Form.Control.Feedback type="invalid">
-                        Please select a check-in date
+                        Please select a check-in date.
                       </Form.Control.Feedback>
                     </div>
-                    {errorMessage && (
-                      <p className="error-message text-danger">
-                        {errorMessage}
-                      </p>
-                    )}
+                    <div className="col-6">
+                      <Form.Label htmlFor="checkOutDate">
+                        Check-Out Date:
+                      </Form.Label>
+                      <FormControl
+                        required
+                        type="date"
+                        id="checkOutDate"
+                        name="checkOutDate"
+                        value={booking.checkOutDate}
+                        placeholder="Check-out date"
+                        onChange={handleInputChange}
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        Please select a check-out date.
+                      </Form.Control.Feedback>
+                    </div>
                   </div>
+                  {errorMessage && (
+                    <Alert variant="danger" className="mt-2">
+                      {errorMessage}
+                    </Alert>
+                  )}
                 </fieldset>
-                <fieldset>
-                  <legend>Number Of Guest</legend>
+
+                <fieldset
+                  className="mb-3"
+                  style={{ border: "2px solid #ced4da", padding: "10px" }}
+                >
+                  <legend>Number Of Guests</legend>
                   <div className="row">
                     <div className="col-6">
                       <Form.Label htmlFor="numberOfAdults">Adults:</Form.Label>
@@ -191,12 +257,12 @@ const BookingForm = () => {
                         id="numberOfAdults"
                         name="numberOfAdults"
                         value={booking.numberOfAdults}
-                        placeholder="0"
+                        placeholder="1"
                         min={1}
                         onChange={handleInputChange}
                       />
                       <Form.Control.Feedback type="invalid">
-                        Please selecte at at least 1 adults.
+                        Please select at least 1 adult.
                       </Form.Control.Feedback>
                     </div>
 
@@ -205,7 +271,6 @@ const BookingForm = () => {
                         Children:
                       </Form.Label>
                       <FormControl
-                        required
                         type="number"
                         id="numberOfChildren"
                         name="numberOfChildren"
@@ -214,14 +279,17 @@ const BookingForm = () => {
                         min={0}
                         onChange={handleInputChange}
                       />
+                      <Form.Control.Feedback type="invalid">
+                        Please enter a valid number of children.
+                      </Form.Control.Feedback>
                     </div>
                   </div>
                 </fieldset>
 
                 <div className="form-group mt-2 mb-2">
-                  <button type="submit" className="btn btn-hotel">
+                  <Button type="submit" variant="primary" className="btn-hotel">
                     Continue
-                  </button>
+                  </Button>
                 </div>
               </Form>
             </div>
@@ -244,5 +312,3 @@ const BookingForm = () => {
 };
 
 export default BookingForm;
-
-// 9:50

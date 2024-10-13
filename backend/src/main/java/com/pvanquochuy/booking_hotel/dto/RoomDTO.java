@@ -12,7 +12,7 @@ public class RoomDTO {
     private Long id;
     private String roomType;
     private BigDecimal roomPrice;
-    private Blob photo;
+    private String photo;
     private String roomDescription;
     private List<BookingDTO> bookings;
 }

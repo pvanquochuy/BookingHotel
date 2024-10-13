@@ -2,12 +2,7 @@ package com.pvanquochuy.booking_hotel.controller;
 
 import com.pvanquochuy.booking_hotel.dto.Response;
 import com.pvanquochuy.booking_hotel.model.Booking;
-import com.pvanquochuy.booking_hotel.model.Room;
-import com.pvanquochuy.booking_hotel.response.BookingResponse;
-import com.pvanquochuy.booking_hotel.response.RoomResponse;
 import com.pvanquochuy.booking_hotel.service.IBookingService;
-import com.pvanquochuy.booking_hotel.service.IRoomService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

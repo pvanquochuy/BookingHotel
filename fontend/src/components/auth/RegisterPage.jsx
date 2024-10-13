@@ -8,9 +8,6 @@ function RegisterPage() {
 
   const from = location.state?.from?.pathname || "/login";
 
-  console.log("location:", location);
-  console.log("from:", from);
-
   const [formData, setFormData] = useState({
     name: "",
     email: "",

@@ -6,9 +6,6 @@ function LoginPage() {
 
   const from = location.state?.from?.pathname || "/";
 
-  console.log("location:", location);
-  console.log("from:", from);
-
   const [formData, setFormData] = useState({
     email: "",
     password: "",
