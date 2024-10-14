@@ -42,7 +42,7 @@ function Navbar() {
     <nav className="navbar">
       <div className="navbar-brand">
         <NavLink to="/home" className="brand-link">
-          Phegon Hotel
+          October Hotel
         </NavLink>
       </div>
       <ul className="navbar-ul">

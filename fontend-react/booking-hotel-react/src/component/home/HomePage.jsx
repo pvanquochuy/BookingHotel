@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-// import RoomResult from "../common/RoomResult";
-// import RoomSearch from "../common/RoomSearch";
+import RoomResult from "../common/RoomResult";
+import RoomSearch from "../common/RoomSearch";
 
 const HomePage = () => {
   const [roomSearchResults, setRoomSearchResults] = useState([]);
@@ -32,8 +32,8 @@ const HomePage = () => {
       </section>
 
       {/* SEARCH/FIND AVAILABLE ROOM SECTION */}
-      {/* <RoomSearch handleSearchResult={handleSearchResult} />
-      <RoomResult roomSearchResults={roomSearchResults} /> */}
+      <RoomSearch handleSearchResult={handleSearchResult} />
+      <RoomResult roomSearchResults={roomSearchResults} />
 
       <h4>
         <a className="view-rooms-home" href="/rooms">
